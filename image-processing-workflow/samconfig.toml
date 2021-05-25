@@ -2,9 +2,10 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
-stack_name = "onepizza-image-process-workflow"
+stack_name = "image-processing-workflow"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1l13nf3rpw0n"
-s3_prefix = "onepizza-image-process-workflow"
+s3_prefix = "image-processing-workflow"
 region = "ap-southeast-1"
 confirm_changeset = true
-capabilities = "CAPABILITY_IAM"
+capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
+parameter_overrides = "RekognitionCollectionID=\"rider-photos\""

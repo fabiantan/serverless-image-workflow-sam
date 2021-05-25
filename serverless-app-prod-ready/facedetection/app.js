@@ -18,7 +18,7 @@ const rekognition = new AWS.Rekognition();
 exports.handler = (event, context, callback) =>
 {
 
-    console.log("Reading input from event:\n", util.inspect(event, {depth: 5}));
+    console.log("Reading2 input from event - white123:\n", util.inspect(event, {depth: 5}));
 
     const srcBucket = event.s3Bucket;
     // Object key may have spaces or unicode non-ASCII characters.
@@ -34,6 +34,8 @@ exports.handler = (event, context, callback) =>
         Attributes: ['ALL']
     };
 
+    console.log("Reading params from event:\n", util.inspect(params, {depth: 5}));
+
     rekognition.detectFaces(params).promise().then((data)=> {
         console.log("Detection result from rekognition:\n", util.inspect(data, {depth: 5}));
         if (data.FaceDetails.length != 1) {
@@ -47,7 +49,7 @@ exports.handler = (event, context, callback) =>
         // remove some fields not used in further processing to de-clutter the output.
         delete detectedFaceDetails['Landmarks'];
 
-        callback(null, detectedFaceDetails);
+        callback(null,  detectedFaceDetails);
     }).catch( err=> {
         console.log(err);
         if (err.code === "ImageTooLargeException"){

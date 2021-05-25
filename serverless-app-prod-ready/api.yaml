@@ -1,31 +1,41 @@
 openapi: "3.0.1"
 info:
-  title: "ImageWorkflowStateMachine"
-  version: "2020-11-06 15:32:29UTC"
+  title: "Rekognition"
+  version: "1.0.0"
+
+x-amazon-apigateway-request-validators:
+  all:
+    validateRequestBody: true
+    validateRequestParameters: true
+  params:
+    validateRequestBody: false
+    validateRequestParameters: true
+  body:
+    validateRequestBody: true
+    validateRequestParameters: false
+
 paths:
-  /workflow/detectfaces:
+  /detectface:
     post:
+
       responses:
-        default:
-          description: "Default response for POST /"
+        "200":
+          description: "200"
+
+      ## API Gateway Integration
       x-amazon-apigateway-integration:
-        integrationSubtype: "StepFunctions-StartSyncExecution"
         credentials:
-          Fn::GetAtt: [HttpApiRole, Arn]
-        requestParameters:
-          Input: "$request.body"
-          StateMachineArn: 
-            Fn::GetAtt: [ImageWorkflowStateMachine, Arn] 
-        payloadFormatVersion: "1.0"
-        type: "aws_proxy"
-        connectionType: "INTERNET"
-x-amazon-apigateway-cors:
-  allowMethods:
-  - "POST"
-  allowHeaders:
-  - "content-type"
-  maxAge: 0
-  allowCredentials: false
-  allowOrigins:
-  - "*"
-x-amazon-apigateway-importexport-version: "1.0"
+          Fn::GetAtt: [ApiRole, Arn]
+        type: "aws"
+        httpMethod: "POST"
+        uri: 
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FaceDetectionFunction.Arn}/invocations
+        passthroughBehavior: "when_no_match"
+        #payloadFormatVersion: "1.0"
+
+        responses:
+          "":
+            statusCode: "200"
+            responseTemplates:
+              application/json: ""
+

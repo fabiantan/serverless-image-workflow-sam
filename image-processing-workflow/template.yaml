@@ -156,6 +156,8 @@ Resources:
         - !GetAtt ImageMagick.Outputs.LayerVersion
       AutoPublishAlias: live
       DeploymentPreference:
+        Enabled: True
+        Role: !GetAtt CodeDeployRole.Arn
         Type: Canary10Percent10Minutes 
         #Alarms:
          # A list of alarms that you want to monitor
@@ -175,8 +177,8 @@ Resources:
       - AttributeName: Username
         KeyType: HASH
       ProvisionedThroughput:
-        ReadCapacityUnits: '3'
-        WriteCapacityUnits: '3'
+        ReadCapacityUnits: 3
+        WriteCapacityUnits: 3
   RiderPhotoS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -286,8 +288,33 @@ Resources:
             - Effect: Allow
               Action: "states:StartSyncExecution"
               Resource: !GetAtt ImageWorkflowStateMachine.Arn  
-       
 
+  CodeDeployRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - codedeploy.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns: 
+      - "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForLambda"
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: Serverless-Facial-Detector
+    Description: Facial Detector Workflow
+    Author: fabtan
+    SpdxLicenseId: Apache-2.0
+    ReadmeUrl: README.md
+    Labels: ['tests']
+    HomePageUrl: https://github.com/fabiantan/serverless-image-workflow-sam
+    SemanticVersion: 0.0.1
+    SourceCodeUrl: https://github.com/fabiantan/serverless-image-workflow-sam
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
@@ -299,3 +326,13 @@ Outputs:
   HelloWorldFunctionIamRole:
     Description: "Implicit IAM Role created for Hello World function"
     Value: !GetAtt HelloWorldFunctionRole.Arn
+  ApiforSyncWF:  
+    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Join
+        - ''
+        - - !GetAtt ApiforSyncWF.ApiEndpoint
+          - '/workflow/detectfaces'
+  SAMLogs:
+    Description: "SAM Logs for the Workflow"
+    Value: !GetAtt SAMLogs.Arn
+      

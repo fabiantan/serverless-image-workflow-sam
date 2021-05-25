@@ -15,6 +15,8 @@ Resources:
   FaceDetectionFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
+      # Layers:
+      #   - !Sub "arn:aws:lambda:ap-southeast-1:580247275435:layer:LambdaInsightsExtension:14"
       CodeUri: facedetection/
       Handler: app.handler
       Runtime: nodejs12.x
@@ -22,7 +24,8 @@ Resources:
       MemorySize: 256
       Tracing: Active
       Policies:
-        Statement:
+      - CloudWatchLambdaInsightsExecutionRolePolicy
+      - Statement:
         - Action:
           - s3:GetObject
           Effect: Allow
@@ -33,19 +36,73 @@ Resources:
           Effect: Allow
           Resource: '*'
           Sid: RekognitionFace
-      AutoPublishAlias: live
+      AutoPublishAlias: Production
       DeploymentPreference:
         Type: Canary10Percent10Minutes 
-  LambdaLogs:
-    Type: AWS::Logs::LogGroup
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: '/detectface'
+            Method: post
+            RestApiId: RekognitionAPI
+
+  ##   API Gateway
+  RekognitionAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      EndpointConfiguration: REGIONAL
+      #CanarySetting:
+      #  PercentTraffic: 0
+      TracingEnabled: true
+      MethodSettings:
+        - HttpMethod: "*"
+          ResourcePath: "/*"
+          LoggingLevel: INFO
+          DataTraceEnabled: true
+          MetricsEnabled: true
+        - HttpMethod: "post"
+          ResourcePath: "/detectface"
+      DefinitionBody:
+        "Fn::Transform":
+          Name: "AWS::Include"
+          Parameters:
+            Location: "./api.yaml"
+        
+
+
+  ApiRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - apigateway.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+      - PolicyName: AllowLambdaExec
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Action: "lambda:*"
+              Resource: !GetAtt FaceDetectionFunction.Arn  
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  HelloWorldFunction:
-    Description: "Hello World Lambda Function ARN"
+  FaceDetectionFunction:
+    Description: "Face Detect Lambda Function ARN"
     Value: !GetAtt FaceDetectionFunction.Arn
-  HelloWorldFunctionIamRole:
-    Description: "Implicit IAM Role created for Hello World function"
+  FaceDetectionFunctionIamRole:
+    Description: "Implicit IAM Role created for Face Detect function"
     Value: !GetAtt FaceDetectionFunctionRole.Arn
+  FaceDetectionFunctionApi:
+    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Sub "https://${RekognitionAPI}.execute-api.${AWS::Region}.amazonaws.com/detectface"

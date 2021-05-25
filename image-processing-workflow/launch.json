@@ -1,0 +1,27 @@
+{
+	"folders": [
+		{
+			"name": "serverless-image-workflow-sam",
+			"path": "../../../../../Dropbox/workspace/vscode/serverless-image-workflow-sam"
+		}
+	],
+	"settings": {},
+	"launch": {
+		"configurations": [
+			{
+				"type": "aws-sam",
+				"request": "direct-invoke",
+				"name": "vscode-nodejs-sam-app-2:HelloWorldFunction (nodejs12.x)",
+				"invokeTarget": {
+					"target": "template",
+					"templatePath": "vscode-nodejs-sam-app-2/template.yaml",
+					"logicalId": "HelloWorldFunction"
+				},
+				"lambda": {
+					"payload": {},
+					"environmentVariables": {}
+				}
+			}
+		]
+	}
+}

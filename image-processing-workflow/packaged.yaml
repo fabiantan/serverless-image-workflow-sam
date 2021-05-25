@@ -26,7 +26,7 @@ Resources:
   HelloWorldFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: HelloWorldFunction
+      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-1l13nf3rpw0n/f43b9cc2e1106e62eafda17bd8e525bd
       Handler: app.handler
       Runtime: nodejs12.x
       Timeout: 60
@@ -47,7 +47,7 @@ Resources:
   FaceSearchFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: FaceSearchFunction
+      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-1l13nf3rpw0n/52a9c301b01c7ef87fca7c45f9e17598
       Description: Use Amazon Rekognition to check if the face is already in the collection
       Environment:
         Variables:
@@ -72,7 +72,7 @@ Resources:
   NotificationPlaceholderFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: NotificationPlaceholderFunction
+      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-1l13nf3rpw0n/5e0d3a9e6e2dbda31f369d96f930c044
       Description: mock notification sender
       Handler: app.handler
       MemorySize: 256
@@ -81,7 +81,7 @@ Resources:
   PersistMetadataFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: PersistMetadataFunction
+      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-1l13nf3rpw0n/efdcc1898e9ace2d026d6f1397521ffa
       Description: Save metadata of the photo to DynamoDB table
       Environment:
         Variables:
@@ -118,7 +118,7 @@ Resources:
           Action:
           - rekognition:IndexFaces
           Resource: '*'
-      CodeUri: IndexFaceFunction
+      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-1l13nf3rpw0n/e61ce1a39d53621ae0223c27004ad2f5
       Environment:
         Variables:
           REKOGNITION_COLLECTION_ID:
@@ -144,7 +144,7 @@ Resources:
           Effect: Allow
           Resource: '*'
           Sid: ReadFromS3Bucket
-      CodeUri: ThumbnailFunction
+      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-1l13nf3rpw0n/b7cbf7f4bb1c5e262f764b7ff825e73c
       Environment:
         Variables:
           THUMBNAIL_BUCKET:
@@ -157,6 +157,11 @@ Resources:
         - Outputs.LayerVersion
       AutoPublishAlias: live
       DeploymentPreference:
+        Enabled: true
+        Role:
+          Fn::GetAtt:
+          - CodeDeployRole
+          - Arn
         Type: Canary10Percent10Minutes
   RiderPhotoDDBTable:
     Type: AWS::DynamoDB::Table
@@ -168,8 +173,8 @@ Resources:
       - AttributeName: Username
         KeyType: HASH
       ProvisionedThroughput:
-        ReadCapacityUnits: '3'
-        WriteCapacityUnits: '3'
+        ReadCapacityUnits: 3
+        WriteCapacityUnits: 3
   RiderPhotoS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -211,7 +216,7 @@ Resources:
         Fn::Transform:
           Name: AWS::Include
           Parameters:
-            Location: ../../api.yaml
+            Location: s3://aws-sam-cli-managed-default-samclisourcebucket-1l13nf3rpw0n/5e5b42584830e22040608e65e87c2f55
   ImageWorkflowStateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
@@ -227,7 +232,9 @@ Resources:
       Tracing:
         Enabled: true
       Type: EXPRESS
-      DefinitionUri: ../../statemachine/imageworkflow.asl.json
+      DefinitionUri:
+        Bucket: aws-sam-cli-managed-default-samclisourcebucket-1l13nf3rpw0n
+        Key: 35d2dccaace6b50e0c1c1af2f33baa83
       DefinitionSubstitutions:
         HelloWorldFunctionArn:
           Fn::GetAtt:
@@ -292,6 +299,32 @@ Resources:
               Fn::GetAtt:
               - ImageWorkflowStateMachine
               - Arn
+  CodeDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - codedeploy.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForLambda
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: Serverless-Facial-Detector
+    Description: Facial Detector Workflow
+    Author: fabtan
+    SpdxLicenseId: Apache-2.0
+    ReadmeUrl: s3://aws-sam-cli-managed-default-samclisourcebucket-1l13nf3rpw0n/1903bc3c8bb950c8440fba98610c91ca
+    Labels:
+    - tests
+    HomePageUrl: https://github.com/fabiantan/serverless-image-workflow-sam
+    SemanticVersion: '0.0.1'
+    SourceCodeUrl: https://github.com/fabiantan/serverless-image-workflow-sam
 Outputs:
   HelloWorldFunction:
     Description: Hello World Lambda Function ARN

@@ -18,7 +18,7 @@ const rekognition = new AWS.Rekognition();
 exports.handler = (event, context, callback) =>
 {
 
-    console.log("Reading input from event:\n", util.inspect(event, {depth: 5}));
+    console.log("Reading input from event123:\n", util.inspect(event, {depth: 5}));
 
     const srcBucket = event.s3Bucket;
     // Object key may have spaces or unicode non-ASCII characters.
@@ -35,7 +35,7 @@ exports.handler = (event, context, callback) =>
     };
 
     rekognition.detectFaces(params).promise().then((data)=> {
-        console.log("Detection result from rekognition:\n", util.inspect(data, {depth: 5}));
+        //console.log("Detection result from rekognition:\n", util.inspect(data, {depth: 5}));
         if (data.FaceDetails.length != 1) {
             callback(new PhotoDoesNotMeetRequirementError("Detected " + data.FaceDetails.length + " faces in the photo."));
         }
